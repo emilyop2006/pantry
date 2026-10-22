@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantry & Inventory Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        emerald: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-sans text-slate-800 antialiased min-h-full flex flex-col pb-12">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white text-xl shadow-md shadow-emerald-200">
+                        <i class="fa-solid fa-kitchen-set"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-slate-900 text-lg leading-tight">Kitchen Hub</h1>
+                        <p class="text-xs text-slate-500 font-medium">Smart Pantry Tracker</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+                    <button id="navInventoryBtn" onclick="switchMainTab('inventory')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-boxes-stacked"></i> Inventory
+                    </button>
+                    <button id="navRecipesBtn" onclick="switchMainTab('recipes')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-utensils text-emerald-600"></i> Recipe Generator
+                    </button>
+                    <button id="navShoppingBtn" onclick="switchMainTab('shopping')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i> Smart Shopping
+                    </button>
+                </nav>
+
+                <!-- Global Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button id="openAddModalBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow flex items-center gap-2">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span class="hidden sm:inline">Add Item</span>
+                    </button>
+                    <button id="resetDataBtn" title="Reset to initial inventory" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 flex-grow w-full">
+
+        <!-- Mobile Navigation Tabs -->
+        <div class="flex md:hidden items-center justify-around bg-white p-1.5 border border-slate-200 rounded-xl mb-6 shadow-sm">
+            <button id="mobNavInventoryBtn" onclick="switchMainTab('inventory')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700">
+                <i class="fa-solid fa-boxes-stacked block text-sm mb-1"></i> Inventory
+            </button>
+            <button id="mobNavRecipesBtn" onclick="switchMainTab('recipes')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-600">
+                <i class="fa-solid fa-utensils block text-sm mb-1"></i> Recipes
+            </button>
+            <button id="mobNavShoppingBtn" onclick="switchMainTab('shopping')" class="flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-600">
+                <i class="fa-solid fa-lightbulb block text-sm mb-1"></i> Smart Shop
+            </button>
+        </div>
+
+        <!-- ================= TAB 1: INVENTORY SECTION ================= -->
+        <div id="tabInventory" class="tab-content grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+            <!-- Left / Main Area: Inventory Section (3 Cols) -->
+            <div class="lg:col-span-3 space-y-6">
+
+                <!-- Controls & Filter Bar -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" placeholder="Search items in pantry..." 
+                               class="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400">
+                        <button id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Category Pills -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-sm" id="categoryTabs">
+                        <!-- Rendered Dynamically -->
+                    </div>
+                </div>
+
+                <!-- Quick Stats / View Switcher -->
+                <div class="flex items-center justify-between px-1">
+                    <div class="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <span>Items List</span>
+                        <span id="activeItemCountBadge" class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-[11px]">0</span>
+                    </div>
+                    <div class="flex items-center space-x-1 bg-slate-200/60 p-1 rounded-lg">
+                        <button id="showAllBtn" class="px-2.5 py-1 rounded-md text-xs font-semibold transition-all bg-white text-slate-800 shadow-sm">In Stock</button>
+                        <button id="showOutBtn" class="px-2.5 py-1 rounded-md text-xs font-semibold transition-all text-slate-600 hover:text-slate-900">Used Up (<span id="outCount">0</span>)</button>
+                    </div>
+                </div>
+
+                <!-- Inventory Grid Container -->
+                <div id="inventoryContainer" class="space-y-8">
+                    <!-- Categories & items will be rendered here -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden bg-white border border-slate-200 rounded-2xl p-12 text-center">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400 text-2xl">
+                        <i class="fa-solid fa-basket-shopping"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-slate-800">No items found</h3>
+                    <p class="text-slate-500 text-sm mt-1 max-w-sm mx-auto">Try adjusting your search query, selecting another category tab, or adding a new item.</p>
+                </div>
+
+            </div>
+
+            <!-- Right Sidebar: Shopping List (1 Col) -->
+            <div class="lg:col-span-1">
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm sticky top-20 flex flex-col max-h-[calc(100vh-6rem)]">
+                    <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-cart-shopping text-emerald-600 text-lg"></i>
+                            <h2 class="font-bold text-slate-900">Shopping List</h2>
+                        </div>
+                        <span id="shoppingListCount" class="bg-emerald-100 text-emerald-800 font-bold text-xs px-2.5 py-1 rounded-full">0</span>
+                    </div>
+
+                    <!-- Quick Add to Shopping List Input -->
+                    <form id="quickAddShoppingForm" class="mt-4 flex gap-2">
+                        <input type="text" id="quickShoppingInput" placeholder="Add custom item..." 
+                               class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800">
+                        <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </form>
+
+                    <!-- Shopping List Items Scroll Area -->
+                    <div id="shoppingListContainer" class="mt-4 overflow-y-auto flex-grow space-y-2 pr-1 divide-y divide-slate-100">
+                        <!-- Dynamic items -->
+                    </div>
+
+                    <!-- Empty Shopping List Placeholder -->
+                    <div id="emptyShoppingState" class="py-8 text-center my-auto">
+                        <i class="fa-solid fa-clipboard-list text-slate-300 text-3xl mb-2"></i>
+                        <p class="text-xs text-slate-400 font-medium">Your shopping list is empty</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Click <span class="text-emerald-600 font-semibold">+ List</span> on any item to add it here.</p>
+                    </div>
+
+                    <!-- Shopping List Footer Actions -->
+                    <div id="shoppingListFooter" class="pt-4 mt-2 border-t border-slate-100 space-y-2 hidden">
+                        <button id="clearCompletedShoppingBtn" class="w-full text-xs font-semibold py-2 px-3 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+                            Clear Completed
+                        </button>
+                        <button id="clearAllShoppingBtn" class="w-full text-xs font-semibold py-2 px-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
+                            Clear Entire List
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= TAB 2: RECIPE GENERATOR ================= -->
+        <div id="tabRecipes" class="tab-content hidden space-y-6">
+            <!-- Filter Bar for Recipes -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Recipe Brainstormer
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Dynamically matched with your currently available in-stock items</p>
+                    </div>
+                    <button onclick="renderRecipes()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrows-rotate"></i> Refresh Recipes
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Cook Time Filter -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Max Preparation Time</label>
+                        <select id="recipeTimeFilter" onchange="renderRecipes()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                            <option value="all">Any Cook Time</option>
+                            <option value="quick">Quick (< 15 mins)</option>
+                            <option value="medium">Medium (15 - 30 mins)</option>
+                            <option value="gourmet">Gourmet (30+ mins)</option>
+                        </select>
+                    </div>
+
+                    <!-- Meal Type Filter -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Meal Type</label>
+                        <select id="recipeTypeFilter" onchange="renderRecipes()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                            <option value="all">All Meal Types</option>
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Lunch/Dinner">Lunch / Dinner</option>
+                            <option value="Snack/Dessert">Snack / Dessert</option>
+                        </select>
+                    </div>
+
+                    <!-- Match Strictness Filter -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Stock Matching</label>
+                        <select id="recipeMatchFilter" onchange="renderRecipes()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                            <option value="all">Show All Compatible</option>
+                            <option value="high">High Match (Ready to Cook)</option>
+                            <option value="missing">Need 1-2 Ingredients</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recipes Container -->
+            <div id="recipesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Recipes rendered dynamically -->
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: SMART SHOPPING & SUGGESTIONS ================= -->
+        <div id="tabShopping" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Suggestions Column (2 Cols) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-brain text-amber-500"></i> Smart Shopping Recommendations
+                                </h2>
+                                <p class="text-xs text-slate-500 mt-0.5">Automated suggestions based on restocks & recipe complementary pairings</p>
+                            </div>
+                        </div>
+
+                        <div id="smartSuggestionsContainer" class="space-y-4">
+                            <!-- Dynamic Smart Suggestions -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shopping List Focus Panel (1 Col) -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm sticky top-20 space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-basket-shopping text-emerald-600"></i> Active Shopping List
+                            </h3>
+                            <span id="smartTabListCount" class="bg-emerald-100 text-emerald-800 font-bold text-xs px-2.5 py-1 rounded-full">0</span>
+                        </div>
+
+                        <div id="smartTabShoppingListContainer" class="space-y-2 max-h-96 overflow-y-auto divide-y divide-slate-100">
+                            <!-- Rendered active list items -->
+                        </div>
+
+                        <div id="smartTabListEmpty" class="py-6 text-center text-slate-400 text-xs">
+                            No items on your list yet. Add items from suggestions!
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Add / Edit Item -->
+    <div id="itemModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="itemModalCard">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <h3 id="modalTitle" class="font-bold text-slate-800">Add New Inventory Item</h3>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="itemForm" class="p-6 space-y-4">
+                <input type="hidden" id="modalItemId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Item Name</label>
+                    <input type="text" id="modalItemName" required placeholder="e.g. Fresh Basil" 
+                           class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Category</label>
+                    <select id="modalItemCategory" class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white">
+                        <option value="Fridge">Fridge</option>
+                        <option value="Fresh produce">Fresh produce</option>
+                        <option value="Freezer">Freezer</option>
+                        <option value="Pantry">Pantry</option>
+                        <option value="Cans & jars">Cans & jars</option>
+                        <option value="Sauces & spreads">Sauces & spreads</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Quantity</label>
+                        <input type="number" id="modalItemQuantity" min="1" value="1" required
+                               class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Unit (Optional)</label>
+                        <input type="text" id="modalItemUnit" placeholder="e.g. pack, jar, g" 
+                               class="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" id="cancelModalBtn" class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Application Script Logic -->
+    <script>
+        // Initial Pre-populated Inventory Data
+        const INITIAL_INVENTORY = [
+            // Fridge
+            { id: '1', name: 'Tofu', category: 'Fridge', inStock: true, quantity: 1, unit: 'pack' },
+            { id: '2', name: 'Hummus', category: 'Fridge', inStock: true, quantity: 1, unit: 'tub' },
+            { id: '3', name: 'Grana Padano', category: 'Fridge', inStock: true, quantity: 1, unit: 'wedge' },
+            { id: '4', name: 'Mushrooms', category: 'Fridge', inStock: true, quantity: 1, unit: 'pack' },
+            { id: '5', name: 'Butter', category: 'Fridge', inStock: true, quantity: 1, unit: 'block' },
+            
+            // Fresh produce
+            { id: '6', name: 'Courgette', category: 'Fresh produce', inStock: true, quantity: 2, unit: 'pcs' },
+            { id: '7', name: 'Tomato', category: 'Fresh produce', inStock: true, quantity: 4, unit: 'pcs' },
+            { id: '8', name: 'Red pepper', category: 'Fresh produce', inStock: true, quantity: 2, unit: 'pcs' },
+            { id: '9', name: 'Cucumber', category: 'Fresh produce', inStock: true, quantity: 1, unit: 'pc' },
+            { id: '10', name: 'Aubergine', category: 'Fresh produce', inStock: true, quantity: 1, unit: 'pc' },
+            { id: '11', name: 'Onion', category: 'Fresh produce', inStock: true, quantity: 5, unit: 'pcs' },
+            { id: '12', name: 'Garlic', category: 'Fresh produce', inStock: true, quantity: 1, unit: 'bulb' },
+
+            // Freezer
+            { id: '13', name: 'Spinach (frozen)', category: 'Freezer', inStock: true, quantity: 1, unit: 'bag' },
+            { id: '14', name: 'Sweet potato cubes (frozen)', category: 'Freezer', inStock: true, quantity: 1, unit: 'bag' },
+            { id: '15', name: 'Frozen peas', category: 'Freezer', inStock: true, quantity: 1, unit: 'bag' },
+            { id: '16', name: 'Frozen blueberries', category: 'Freezer', inStock: true, quantity: 1, unit: 'bag' },
+            { id: '17', name: 'Dried fruit', category: 'Freezer', inStock: true, quantity: 1, unit: 'pack' },
+
+            // Pantry
+            { id: '18', name: 'Macaroni', category: 'Pantry', inStock: true, quantity: 1, unit: 'box' },
+            { id: '19', name: 'Jasmine rice', category: 'Pantry', inStock: true, quantity: 1, unit: 'bag' },
+            { id: '20', name: 'Soy mince (Soja Schnetzel)', category: 'Pantry', inStock: true, quantity: 1, unit: 'pack' },
+            { id: '21', name: 'Oats', category: 'Pantry', inStock: true, quantity: 1, unit: 'pack' },
+            { id: '22', name: 'Honey spelt puffs', category: 'Pantry', inStock: true, quantity: 1, unit: 'box' },
+            { id: '23', name: 'Chia seeds', category: 'Pantry', inStock: true, quantity: 1, unit: 'jar' },
+            { id: '24', name: 'Tortilla wraps', category: 'Pantry', inStock: true, quantity: 1, unit: 'pack' },
+            { id: '25', name: 'Corn cakes', category: 'Pantry', inStock: true, quantity: 1, unit: 'pack' },
+            { id: '26', name: 'Penne', category: 'Pantry', inStock: true, quantity: 1, unit: 'box' },
+            { id: '27', name: 'Egg noodles', category: 'Pantry', inStock: true, quantity: 1, unit: 'pack' },
+            { id: '28', name: 'Rice paper', category: 'Pantry', inStock: true, quantity: 1, unit: 'pack' },
+            { id: '29', name: 'Couscous', category: 'Pantry', inStock: true, quantity: 1, unit: 'box' },
+            { id: '30', name: 'Olive oil', category: 'Pantry', inStock: true, quantity: 1, unit: 'bottle' },
+            { id: '31', name: 'Coconut oil', category: 'Pantry', inStock: true, quantity: 1, unit: 'jar' },
+            { id: '32', name: 'White flour', category: 'Pantry', inStock: true, quantity: 1, unit: 'bag' },
+            { id: '33', name: 'White sugar', category: 'Pantry', inStock: true, quantity: 1, unit: 'bag' },
+            { id: '34', name: 'Vegetable bouillon', category: 'Pantry', inStock: true, quantity: 1, unit: 'jar' },
+            { id: '35', name: 'Peppermint tea', category: 'Pantry', inStock: true, quantity: 1, unit: 'box' },
+            { id: '36', name: 'Wholegrain bread', category: 'Pantry', inStock: true, quantity: 1, unit: 'loaf' },
+
+            // Cans & jars
+            { id: '37', name: 'Pesto Genovese', category: 'Cans & jars', inStock: true, quantity: 1, unit: 'jar' },
+            { id: '38', name: 'Passata', category: 'Cans & jars', inStock: true, quantity: 2, unit: 'bottles' },
+            { id: '39', name: 'Chopped tomatoes', category: 'Cans & jars', inStock: true, quantity: 3, unit: 'cans' },
+            { id: '40', name: 'Pickles', category: 'Cans & jars', inStock: true, quantity: 1, unit: 'jar' },
+            { id: '41', name: 'Chickpeas', category: 'Cans & jars', inStock: true, quantity: 2, unit: 'cans' },
+            { id: '42', name: 'Kidney beans', category: 'Cans & jars', inStock: true, quantity: 2, unit: 'cans' },
+            { id: '43', name: 'Sweet corn', category: 'Cans & jars', inStock: true, quantity: 2, unit: 'cans' },
+            { id: '44', name: 'Tomato paste', category: 'Cans & jars', inStock: true, quantity: 1, unit: 'tube' },
+
+            // Sauces & spreads
+            { id: '45', name: 'Peanut butter', category: 'Sauces & spreads', inStock: true, quantity: 1, unit: 'jar' },
+            { id: '46', name: 'Date syrup', category: 'Sauces & spreads', inStock: true, quantity: 1, unit: 'bottle' },
+            { id: '47', name: 'Hoisin sauce', category: 'Sauces & spreads', inStock: true, quantity: 1, unit: 'bottle' },
+            { id: '48', name: 'Soy sauce', category: 'Sauces & spreads', inStock: true, quantity: 1, unit: 'bottle' },
+            { id: '49', name: 'Garlic sauce', category: 'Sauces & spreads', inStock: true, quantity: 1, unit: 'bottle' },
+            { id: '50', name: 'Chili sauce', category: 'Sauces & spreads', inStock: true, quantity: 1, unit: 'bottle' }
+        ];
+
+        // Master Recipe Knowledge Base
+        const RECIPES_DATABASE = [
+            {
+                id: 'r1',
+                title: 'Crispy Tofu Summer Rolls',
+                mealType: 'Lunch/Dinner',
+                prepTime: 12,
+                timeCategory: 'quick',
+                ingredients: ['Tofu', 'Soy sauce', 'Rice paper', 'Garlic', 'Cucumber', 'Peanut butter'],
+                steps: [
+                    'Slice tofu into strips and pan-fry with soy sauce until crispy.',
+                    'Dip rice paper briefly in warm water until pliable.',
+                    'Fill rice paper with crispy tofu and sliced cucumber.',
+                    'Mix peanut butter with soy sauce & garlic for dipping sauce.'
+                ]
+            },
+            {
+                id: 'r2',
+                title: 'Ratatouille Penne Bake',
+                mealType: 'Lunch/Dinner',
+                prepTime: 35,
+                timeCategory: 'gourmet',
+                ingredients: ['Penne', 'Passata', 'Grana Padano', 'Courgette', 'Aubergine', 'Mushrooms', 'Garlic', 'Onion'],
+                steps: [
+                    'Boil penne pasta until al dente.',
+                    'Sauté diced aubergine, courgette, mushrooms, garlic, and onion in olive oil.',
+                    'Stir in passata and simmer for 10 minutes.',
+                    'Combine pasta and sauce in dish, top with Grana Padano, and bake at 200°C for 15 mins.'
+                ]
+            },
+            {
+                id: 'r3',
+                title: 'Chana Masala Spinach Curry with Couscous',
+                mealType: 'Lunch/Dinner',
+                prepTime: 20,
+                timeCategory: 'medium',
+                ingredients: ['Chickpeas', 'Spinach (frozen)', 'Chopped tomatoes', 'Couscous', 'Onion', 'Garlic'],
+                steps: [
+                    'Sauté onion and garlic until fragrant.',
+                    'Add chickpeas, chopped tomatoes, and frozen spinach. Simmer for 12 minutes.',
+                    'Pour boiling vegetable bouillon water over couscous and cover for 5 minutes.',
+                    'Serve rich chickpea spinach curry hot over fluffy couscous.'
+                ]
+            },
+            {
+                id: 'r4',
+                title: 'Protein Power Peanut Berry Overnight Oats',
+                mealType: 'Breakfast',
+                prepTime: 5,
+                timeCategory: 'quick',
+                ingredients: ['Oats', 'Chia seeds', 'Peanut butter', 'Frozen blueberries', 'Date syrup'],
+                steps: [
+                    'Mix oats, chia seeds, and water/milk in a glass jar.',
+                    'Swirl in peanut butter and date syrup for sweetness.',
+                    'Top with frozen blueberries and refrigerate overnight.'
+                ]
+            },
+            {
+                id: 'r5',
+                title: 'Smoky Plant-Protein Chili Wraps',
+                mealType: 'Lunch/Dinner',
+                prepTime: 22,
+                timeCategory: 'medium',
+                ingredients: ['Soy mince (Soja Schnetzel)', 'Kidney beans', 'Chopped tomatoes', 'Tortilla wraps', 'Sweet corn', 'Onion', 'Chili sauce'],
+                steps: [
+                    'Rehydrate soy mince in hot vegetable bouillon.',
+                    'Sauté onions, then add rehydrated soy mince, kidney beans, corn, and chopped tomatoes.',
+                    'Simmer until thick, season with chili sauce.',
+                    'Spoon hearty chili into warmed tortilla wraps and fold.'
+                ]
+            },
+            {
+                id: 'r6',
+                title: 'Quick Pesto Veggie Noodle Stir-Fry',
+                mealType: 'Lunch/Dinner',
+                prepTime: 14,
+                timeCategory: 'quick',
+                ingredients: ['Egg noodles', 'Pesto Genovese', 'Red pepper', 'Courgette', 'Mushrooms', 'Soy sauce'],
+                steps: [
+                    'Cook egg noodles according to package instructions.',
+                    'Stir-fry sliced red pepper, courgette, and mushrooms on high heat.',
+                    'Toss noodles into pan, stir in Pesto Genovese and a splash of soy sauce.'
+                ]
+            },
+            {
+                id: 'r7',
+                title: 'Crispy Rice Paper Egg-Free Dumpling Bites',
+                mealType: 'Snack/Dessert',
+                prepTime: 18,
+                timeCategory: 'medium',
+                ingredients: ['Rice paper', 'Soy mince (Soja Schnetzel)', 'Garlic', 'Soy sauce', 'Hoisin sauce', 'Onion'],
+                steps: [
+                    'Soak soy mince in warm water, drain, and mix with garlic, onion, soy sauce, and hoisin.',
+                    'Wrap spoonfuls of filling inside double layers of wet rice paper.',
+                    'Pan-fry wraps in coconut oil until golden and crispy.'
+                ]
+            },
+            {
+                id: 'r8',
+                title: 'Hummus & Roasted Sweet Potato Power Bowl',
+                mealType: 'Lunch/Dinner',
+                prepTime: 25,
+                timeCategory: 'medium',
+                ingredients: ['Hummus', 'Sweet potato cubes (frozen)', 'Jasmine rice', 'Cucumber', 'Pickles'],
+                steps: [
+                    'Roast sweet potato cubes in olive oil at 200°C for 20 mins.',
+                    'Cook Jasmine rice.',
+                    'Assemble bowl with rice, sweet potatoes, fresh cucumber, pickles, and a generous scoop of hummus.'
+                ]
+            }
+        ];
+
+        // Pairing logic for Smart Suggestions
+        const COMPLEMENTARY_PAIRINGS = [
+            { required: ['Couscous', 'Chickpeas', 'Tomato'], suggest: 'Lemon Juice', reason: 'Adds zest and acidity to chickpea couscous bowls.' },
+            { required: ['Tofu', 'Soy sauce'], suggest: 'Sesame Oil', reason: 'Enhances aroma and flavor for pan-fried tofu dishes.' },
+            { required: ['Oats', 'Peanut butter'], suggest: 'Plant Milk (Almond/Oat)', reason: 'Creates creamy overnight oats and breakfast bowls.' },
+            { required: ['Penne', 'Passata'], suggest: 'Fresh Basil', reason: 'Classic fresh herb pairing for tomato pasta sauces.' },
+            { required: ['Tortilla wraps', 'Kidney beans'], suggest: 'Avocado / Guacamole', reason: 'Adds richness and creaminess to Mexican chili wraps.' }
+        ];
+
+        const CATEGORIES = [
+            { name: 'All', icon: 'fa-border-all' },
+            { name: 'Fridge', icon: 'fa-snowflake' },
+            { name: 'Fresh produce', icon: 'fa-carrot' },
+            { name: 'Freezer', icon: 'fa-icicles' },
+            { name: 'Pantry', icon: 'fa-box-archive' },
+            { name: 'Cans & jars', icon: 'fa-jar' },
+            { name: 'Sauces & spreads', icon: 'fa-bottle-droplet' }
+        ];
+
+        // State Management
+        let inventory = [];
+        let shoppingList = [];
+        let activeCategory = 'All';
+        let searchQuery = '';
+        let showOutMode = false;
+
+        // DOM Elements
+        const inventoryContainer = document.getElementById('inventoryContainer');
+        const categoryTabs = document.getElementById('categoryTabs');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const emptyState = document.getElementById('emptyState');
+        const shoppingListContainer = document.getElementById('shoppingListContainer');
+        const emptyShoppingState = document.getElementById('emptyShoppingState');
+        const shoppingListCount = document.getElementById('shoppingListCount');
+        const shoppingListFooter = document.getElementById('shoppingListFooter');
+        const activeItemCountBadge = document.getElementById('activeItemCountBadge');
+        const outCount = document.getElementById('outCount');
+        const showAllBtn = document.getElementById('showAllBtn');
+        const showOutBtn = document.getElementById('showOutBtn');
+
+        // Modal Elements
+        const itemModal = document.getElementById('itemModal');
+        const itemModalCard = document.getElementById('itemModalCard');
+        const openAddModalBtn = document.getElementById('openAddModalBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+        const itemForm = document.getElementById('itemForm');
+        const resetDataBtn = document.getElementById('resetDataBtn');
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            renderCategoryTabs();
+            renderInventory();
+            renderShoppingList();
+            renderRecipes();
+            renderSmartSuggestions();
+            setupEventListeners();
+        });
+
+        // Tab Switching Handler
+        function switchMainTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+
+            // Desktop Buttons
+            const btnInv = document.getElementById('navInventoryBtn');
+            const btnRec = document.getElementById('navRecipesBtn');
+            const btnShop = document.getElementById('navShoppingBtn');
+
+            // Mobile Buttons
+            const mobInv = document.getElementById('mobNavInventoryBtn');
+            const mobRec = document.getElementById('mobNavRecipesBtn');
+            const mobShop = document.getElementById('mobNavShoppingBtn');
+
+            const activeClassDesk = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm flex items-center gap-1.5";
+            const inactiveClassDesk = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+
+            const activeClassMob = "flex-1 py-2 text-center text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700";
+            const inactiveClassMob = "flex-1 py-2 text-center text-xs font-bold rounded-lg text-slate-600";
+
+            btnInv.className = inactiveClassDesk;
+            btnRec.className = inactiveClassDesk;
+            btnShop.className = inactiveClassDesk;
+
+            mobInv.className = inactiveClassMob;
+            mobRec.className = inactiveClassMob;
+            mobShop.className = inactiveClassMob;
+
+            if (tabName === 'inventory') {
+                document.getElementById('tabInventory').classList.remove('hidden');
+                btnInv.className = activeClassDesk;
+                mobInv.className = activeClassMob;
+            } else if (tabName === 'recipes') {
+                document.getElementById('tabRecipes').classList.remove('hidden');
+                btnRec.className = activeClassDesk;
+                mobRec.className = activeClassMob;
+                renderRecipes();
+            } else if (tabName === 'shopping') {
+                document.getElementById('tabShopping').classList.remove('hidden');
+                btnShop.className = activeClassDesk;
+                mobShop.className = activeClassMob;
+                renderSmartSuggestions();
+            }
+        }
+
+        // Load / Save LocalStorage
+        function loadState() {
+            const savedInventory = localStorage.getItem('kitchen_hub_inventory');
+            const savedShopping = localStorage.getItem('kitchen_hub_shopping');
+
+            if (savedInventory) {
+                try { inventory = JSON.parse(savedInventory); } catch (e) { inventory = [...INITIAL_INVENTORY]; }
+            } else {
+                inventory = [...INITIAL_INVENTORY];
+            }
+
+            if (savedShopping) {
+                try { shoppingList = JSON.parse(savedShopping); } catch (e) { shoppingList = []; }
+            } else {
+                shoppingList = [];
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('kitchen_hub_inventory', JSON.stringify(inventory));
+            localStorage.setItem('kitchen_hub_shopping', JSON.stringify(shoppingList));
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase().trim();
+                clearSearchBtn.classList.toggle('hidden', searchQuery === '');
+                renderInventory();
+            });
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                searchQuery = '';
+                clearSearchBtn.classList.add('hidden');
+                renderInventory();
+            });
+
+            showAllBtn.addEventListener('click', () => {
+                showOutMode = false;
+                showAllBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold transition-all bg-white text-slate-800 shadow-sm";
+                showOutBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold transition-all text-slate-600 hover:text-slate-900";
+                renderInventory();
+            });
+
+            showOutBtn.addEventListener('click', () => {
+                showOutMode = true;
+                showOutBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold transition-all bg-white text-slate-800 shadow-sm";
+                showAllBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold transition-all text-slate-600 hover:text-slate-900";
+                renderInventory();
+            });
+
+            document.getElementById('quickAddShoppingForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('quickShoppingInput');
+                const val = input.value.trim();
+                if (val) {
+                    addShoppingItem(val);
+                    input.value = '';
+                }
+            });
+
+            document.getElementById('clearCompletedShoppingBtn').addEventListener('click', () => {
+                shoppingList = shoppingList.filter(item => !item.checked);
+                saveState();
+                renderShoppingList();
+                renderSmartSuggestions();
+                showToast("Cleared completed items");
+            });
+
+            document.getElementById('clearAllShoppingBtn').addEventListener('click', () => {
+                if (confirm('Clear all items from your shopping list?')) {
+                    shoppingList = [];
+                    saveState();
+                    renderShoppingList();
+                    renderSmartSuggestions();
+                    showToast("Shopping list cleared");
+                }
+            });
+
+            openAddModalBtn.addEventListener('click', () => openModal());
+            closeModalBtn.addEventListener('click', () => closeModal());
+            cancelModalBtn.addEventListener('click', () => closeModal());
+
+            itemForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveModalItem();
+            });
+
+            resetDataBtn.addEventListener('click', () => {
+                if (confirm('Reset inventory back to initial default list?')) {
+                    inventory = JSON.parse(JSON.stringify(INITIAL_INVENTORY));
+                    shoppingList = [];
+                    saveState();
+                    renderInventory();
+                    renderShoppingList();
+                    renderRecipes();
+                    renderSmartSuggestions();
+                    showToast("Inventory restored to defaults");
+                }
+            });
+        }
+
+        // Render Category Tabs/Pills
+        function renderCategoryTabs() {
+            categoryTabs.innerHTML = CATEGORIES.map(cat => {
+                const isActive = activeCategory === cat.name;
+                const activeClass = isActive 
+                    ? 'bg-emerald-600 text-white shadow-sm' 
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200';
+                
+                return `
+                    <button onclick="setCategory('${cat.name}')" 
+                            class="px-3 py-1.5 rounded-xl font-medium flex items-center gap-2 shrink-0 transition-all ${activeClass}">
+                        <i class="fa-solid ${cat.icon} text-xs"></i>
+                        <span>${cat.name}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setCategory(catName) {
+            activeCategory = catName;
+            renderCategoryTabs();
+            renderInventory();
+        }
+
+        // Render Inventory Grid
+        function renderInventory() {
+            inventoryContainer.innerHTML = '';
+
+            let filtered = inventory.filter(item => {
+                const matchesCat = activeCategory === 'All' || item.category === activeCategory;
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery);
+                const matchesStock = showOutMode ? !item.inStock : item.inStock;
+                return matchesCat && matchesSearch && matchesStock;
+            });
+
+            const activeInStockCount = inventory.filter(i => i.inStock).length;
+            const activeOutCount = inventory.filter(i => !i.inStock).length;
+            activeItemCountBadge.textContent = activeInStockCount;
+            outCount.textContent = activeOutCount;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            const categoriesToDisplay = activeCategory === 'All' 
+                ? CATEGORIES.filter(c => c.name !== 'All').map(c => c.name)
+                : [activeCategory];
+
+            categoriesToDisplay.forEach(catName => {
+                const catItems = filtered.filter(i => i.category === catName);
+                if (catItems.length === 0) return;
+
+                const catMeta = CATEGORIES.find(c => c.name === catName) || { icon: 'fa-folder' };
+
+                const categorySection = document.createElement('div');
+                categorySection.className = 'space-y-3';
+                categorySection.innerHTML = `
+                    <div class="flex items-center space-x-2 border-b border-slate-200/80 pb-2">
+                        <i class="fa-solid ${catMeta.icon} text-emerald-600 text-sm"></i>
+                        <h3 class="font-bold text-slate-800 text-sm tracking-wide uppercase">${catName}</h3>
+                        <span class="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full font-semibold">${catItems.length}</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                        ${catItems.map(item => renderItemCard(item)).join('')}
+                    </div>
+                `;
+                inventoryContainer.appendChild(categorySection);
+            });
+        }
+
+        function renderItemCard(item) {
+            const inShopping = shoppingList.some(s => s.inventoryId === item.id);
+            const isOutOfStock = !item.inStock;
+
+            return `
+                <div class="bg-white border ${isOutOfStock ? 'border-slate-200 bg-slate-50/50 opacity-75' : 'border-slate-200/80'} rounded-2xl p-3.5 shadow-sm hover:shadow transition-all duration-200 flex flex-col justify-between group">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm ${isOutOfStock ? 'line-through text-slate-400' : ''}">${escapeHtml(item.name)}</h4>
+                            <p class="text-xs text-slate-400 mt-0.5">${item.category}</p>
+                        </div>
+                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openModal('${item.id}')" class="p-1 text-slate-400 hover:text-slate-600 rounded" title="Edit">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteItem('${item.id}')" class="p-1 text-slate-400 hover:text-rose-600 rounded" title="Delete">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <div class="flex items-center space-x-1.5 bg-slate-50 border border-slate-200 rounded-lg p-0.5">
+                            <button onclick="updateQuantity('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded text-xs font-bold transition-colors">
+                                -
+                            </button>
+                            <span class="text-xs font-bold text-slate-700 px-1.5">${item.quantity} <span class="text-[10px] font-normal text-slate-400">${item.unit || ''}</span></span>
+                            <button onclick="updateQuantity('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-200 rounded text-xs font-bold transition-colors">
+                                +
+                            </button>
+                        </div>
+
+                        <div class="flex items-center space-x-1">
+                            <button onclick="toggleInStock('${item.id}')" 
+                                    class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${isOutOfStock ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'}">
+                                ${isOutOfStock ? '<i class="fa-solid fa-rotate-left mr-1"></i>Restore' : 'Used up'}
+                            </button>
+                            
+                            <button onclick="toggleShoppingFromInventory('${item.id}')" 
+                                    class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1 ${inShopping ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'}">
+                                <i class="fa-solid ${inShopping ? 'fa-check' : 'fa-plus'} text-[10px]"></i>
+                                <span>List</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Sidebar Shopping List
+        function renderShoppingList() {
+            shoppingListContainer.innerHTML = '';
+
+            if (shoppingList.length === 0) {
+                emptyShoppingState.classList.remove('hidden');
+                shoppingListFooter.classList.add('hidden');
+                shoppingListCount.textContent = '0';
+                return;
+            }
+
+            emptyShoppingState.classList.add('hidden');
+            shoppingListFooter.classList.remove('hidden');
+            shoppingListCount.textContent = shoppingList.length;
+
+            shoppingList.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = `py-2.5 flex items-center justify-between gap-2 group ${item.checked ? 'opacity-60' : ''}`;
+                el.innerHTML = `
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleShoppingCheck(${index})" 
+                               class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer">
+                        <span class="text-sm text-slate-800 font-medium truncate ${item.checked ? 'line-through text-slate-400' : ''}">
+                            ${escapeHtml(item.name)}
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        ${item.inventoryId ? `
+                            <button onclick="restockFromShopping('${item.inventoryId}', ${index})" title="Mark Restocked in Pantry" 
+                                    class="p-1.5 text-xs text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
+                                <i class="fa-solid fa-box-archive"></i>
+                            </button>
+                        ` : ''}
+                        <button onclick="removeShoppingItem(${index})" class="p-1.5 text-xs text-slate-400 hover:text-rose-600 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+                shoppingListContainer.appendChild(el);
+            });
+        }
+
+        // ================= RECIPE GENERATOR ENGINE =================
+        function renderRecipes() {
+            const container = document.getElementById('recipesContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            const timeFilter = document.getElementById('recipeTimeFilter').value;
+            const typeFilter = document.getElementById('recipeTypeFilter').value;
+            const matchFilter = document.getElementById('recipeMatchFilter').value;
+
+            // Extract set of names of currently in-stock items
+            const inStockNames = new Set(
+                inventory.filter(i => i.inStock).map(i => i.name.toLowerCase().trim())
+            );
+
+            let processedRecipes = RECIPES_DATABASE.map(recipe => {
+                let availableCount = 0;
+                let missingCount = 0;
+
+                const ingredientStatus = recipe.ingredients.map(ing => {
+                    const ingLower = ing.toLowerCase().trim();
+                    // Match partials or full string
+                    const hasIngredient = Array.from(inStockNames).some(stockName => 
+                        stockName.includes(ingLower) || ingLower.includes(stockName)
+                    );
+
+                    if (hasIngredient) availableCount++;
+                    else missingCount++;
+
+                    return { name: ing, inStock: hasIngredient };
+                });
+
+                const matchPercent = Math.round((availableCount / recipe.ingredients.length) * 100);
+
+                return {
+                    ...recipe,
+                    ingredientStatus,
+                    availableCount,
+                    missingCount,
+                    matchPercent
+                };
+            });
+
+            // Filtering
+            processedRecipes = processedRecipes.filter(r => {
+                if (timeFilter !== 'all' && r.timeCategory !== timeFilter) return false;
+                if (typeFilter !== 'all' && r.mealType !== typeFilter) return false;
+                if (matchFilter === 'high' && r.matchPercent < 75) return false;
+                if (matchFilter === 'missing' && (r.missingCount === 0 || r.missingCount > 3)) return false;
+                return true;
+            });
+
+            // Sort by highest match percentage first
+            processedRecipes.sort((a, b) => b.matchPercent - a.matchPercent);
+
+            if (processedRecipes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-12 text-center">
+                        <i class="fa-solid fa-utensils text-slate-300 text-4xl mb-3"></i>
+                        <h3 class="text-base font-semibold text-slate-800">No matching recipes found</h3>
+                        <p class="text-xs text-slate-500 mt-1">Try relaxing your time or meal type filters to see more recipes!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            processedRecipes.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4";
+
+                const matchBadgeColor = recipe.matchPercent >= 80 
+                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                    : (recipe.matchPercent >= 50 ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-slate-100 text-slate-700 border-slate-200');
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="inline-block text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md mb-1">${recipe.mealType}</span>
+                                <h3 class="font-bold text-slate-900 text-base leading-snug">${escapeHtml(recipe.title)}</h3>
+                            </div>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${matchBadgeColor} shrink-0">
+                                ${recipe.matchPercent}% Match
+                            </span>
+                        </div>
+
+                        <div class="flex items-center text-xs text-slate-500 gap-3 font-medium">
+                            <span><i class="fa-regular fa-clock text-slate-400 mr-1"></i>${recipe.prepTime} mins</span>
+                            <span><i class="fa-solid fa-basket-shopping text-slate-400 mr-1"></i>${recipe.availableCount}/${recipe.ingredients.length} in stock</span>
+                        </div>
+
+                        <!-- Ingredient Badges -->
+                        <div>
+                            <p class="text-[11px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">Required Ingredients</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${recipe.ingredientStatus.map(ing => `
+                                    <span class="text-xs px-2 py-1 rounded-lg border font-medium flex items-center gap-1 ${ing.inStock ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-700'}">
+                                        <i class="fa-solid ${ing.inStock ? 'fa-check text-emerald-600' : 'fa-xmark text-rose-500'} text-[10px]"></i>
+                                        ${escapeHtml(ing.name)}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Steps Accordion / List -->
+                        <details class="group text-xs border-t border-slate-100 pt-3">
+                            <summary class="font-bold text-slate-700 cursor-pointer flex items-center justify-between text-xs py-1">
+                                <span>Cooking Instructions</span>
+                                <i class="fa-solid fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                            </summary>
+                            <ol class="list-decimal list-inside space-y-1.5 text-slate-600 mt-2 pl-1 leading-relaxed">
+                                ${recipe.steps.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                            </ol>
+                        </details>
+                    </div>
+
+                    ${recipe.missingCount > 0 ? `
+                        <button onclick="addMissingRecipeIngredients(['${recipe.ingredientStatus.filter(i => !i.inStock).map(i => escapeHtml(i.name)).join("','")}'])" 
+                                class="w-full text-xs font-bold py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 mt-2">
+                            <i class="fa-solid fa-cart-plus"></i> Add ${recipe.missingCount} Missing Items to List
+                        </button>
+                    ` : `
+                        <div class="w-full text-center text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 py-2 rounded-xl">
+                            <i class="fa-solid fa-circle-check mr-1"></i> You have all ingredients!
+                        </div>
+                    `}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addMissingRecipeIngredients(missingArray) {
+            let addedCount = 0;
+            missingArray.forEach(name => {
+                const exists = shoppingList.some(s => s.name.toLowerCase() === name.toLowerCase());
+                if (!exists) {
+                    shoppingList.push({ name, checked: false, inventoryId: null });
+                    addedCount++;
+                }
+            });
+            saveState();
+            renderShoppingList();
+            renderSmartSuggestions();
+            showToast(`Added ${addedCount} missing ingredients to list!`);
+        }
+
+        // ================= SMART SHOPPING SUGGESTIONS =================
+        function renderSmartSuggestions() {
+            const container = document.getElementById('smartSuggestionsContainer');
+            const listContainer = document.getElementById('smartTabShoppingListContainer');
+            const listEmpty = document.getElementById('smartTabListEmpty');
+            const countBadge = document.getElementById('smartTabListCount');
+
+            if (!container) return;
+
+            container.innerHTML = '';
+            countBadge.textContent = shoppingList.length;
+
+            // Render Shopping Panel on tab 3
+            if (shoppingList.length === 0) {
+                listContainer.innerHTML = '';
+                listEmpty.classList.remove('hidden');
+            } else {
+                listEmpty.classList.add('hidden');
+                listContainer.innerHTML = shoppingList.map((item, idx) => `
+                    <div class="py-2 flex items-center justify-between text-xs">
+                        <span class="font-medium text-slate-800 truncate">${escapeHtml(item.name)}</span>
+                        <button onclick="removeShoppingItem(${idx})" class="text-slate-400 hover:text-rose-600">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            // 1. Out of Stock / Restock Suggestions
+            const usedUpItems = inventory.filter(i => !i.inStock);
+
+            // 2. Complementary Pairings based on in-stock items
+            const inStockNames = inventory.filter(i => i.inStock).map(i => i.name.toLowerCase());
+            const pairingsToSuggest = [];
+
+            COMPLEMENTARY_PAIRINGS.forEach(pair => {
+                const hasAllRequired = pair.required.every(req => 
+                    inStockNames.some(stock => stock.includes(req.toLowerCase()))
+                );
+                if (hasAllRequired) {
+                    // Check if already in stock or in shopping list
+                    const alreadyInStock = inStockNames.some(stock => stock.includes(pair.suggest.toLowerCase()));
+                    const alreadyInList = shoppingList.some(s => s.name.toLowerCase().includes(pair.suggest.toLowerCase()));
+
+                    if (!alreadyInStock && !alreadyInList) {
+                        pairingsToSuggest.push(pair);
+                    }
+                }
+            });
+
+            if (usedUpItems.length === 0 && pairingsToSuggest.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
+                        <i class="fa-solid fa-face-smile-beam text-emerald-500 text-3xl mb-2"></i>
+                        <h4 class="font-bold text-slate-800 text-sm">Pantry is Fully Stocked!</h4>
+                        <p class="text-xs text-slate-500 mt-1">No items currently marked as 'Used Up' and no missing complementary pairings detected.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Section 1: Restock Low/Used Up Items
+            if (usedUpItems.length > 0) {
+                const section = document.createElement('div');
+                section.className = "space-y-3";
+                section.innerHTML = `
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-left text-rose-500"></i> Restock Low / Used Up Staples (${usedUpItems.length})
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${usedUpItems.map(item => {
+                            const inList = shoppingList.some(s => s.inventoryId === item.id);
+                            return `
+                                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800">${escapeHtml(item.name)}</p>
+                                        <p class="text-[11px] text-slate-400">${item.category}</p>
+                                    </div>
+                                    <button onclick="toggleShoppingFromInventory('${item.id}')" 
+                                            class="text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${inList ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'}">
+                                        ${inList ? '<i class="fa-solid fa-check mr-1"></i> Added' : '<i class="fa-solid fa-plus mr-1"></i> Add to List'}
+                                    </button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                container.appendChild(section);
+            }
+
+            // Section 2: Complementary Suggestions
+            if (pairingsToSuggest.length > 0) {
+                const section = document.createElement('div');
+                section.className = "space-y-3 pt-2";
+                section.innerHTML = `
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Smart Recipe Enhancers
+                    </h3>
+                    <div class="space-y-3">
+                        ${pairingsToSuggest.map(pair => `
+                            <div class="p-4 bg-amber-50/50 border border-amber-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Suggested: <span class="text-amber-900">${escapeHtml(pair.suggest)}</span></p>
+                                    <p class="text-xs text-slate-600 mt-0.5">${escapeHtml(pair.reason)}</p>
+                                    <div class="mt-1.5 flex items-center gap-1 text-[11px] text-slate-400">
+                                        <span>Because you have:</span>
+                                        <span class="font-semibold text-slate-600">${pair.required.join(', ')}</span>
+                                    </div>
+                                </div>
+                                <button onclick="addShoppingItem('${escapeHtml(pair.suggest)}')" class="shrink-0 text-xs font-bold px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-all shadow-sm">
+                                    + Add Suggestion
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(section);
+            }
+        }
+
+        // Inventory Handlers
+        function updateQuantity(id, delta) {
+            const item = inventory.find(i => i.id === id);
+            if (item) {
+                item.quantity = Math.max(0, item.quantity + delta);
+                if (item.quantity === 0) {
+                    item.inStock = false;
+                    showToast(`${item.name} marked as out of stock`);
+                }
+                saveState();
+                renderInventory();
+                renderRecipes();
+                renderSmartSuggestions();
+            }
+        }
+
+        function toggleInStock(id) {
+            const item = inventory.find(i => i.id === id);
+            if (item) {
+                item.inStock = !item.inStock;
+                if (item.inStock && item.quantity === 0) {
+                    item.quantity = 1;
+                }
+                saveState();
+                renderInventory();
+                renderRecipes();
+                renderSmartSuggestions();
+                showToast(`${item.name} is now ${item.inStock ? 'In Stock' : 'Used Up'}`);
+            }
+        }
+
+        function deleteItem(id) {
+            const item = inventory.find(i => i.id === id);
+            if (confirm(`Delete "${item?.name}" from inventory?`)) {
+                inventory = inventory.filter(i => i.id !== id);
+                shoppingList = shoppingList.filter(s => s.inventoryId !== id);
+                saveState();
+                renderInventory();
+                renderShoppingList();
+                renderRecipes();
+                renderSmartSuggestions();
+                showToast("Item deleted");
+            }
+        }
+
+        function toggleShoppingFromInventory(inventoryId) {
+            const invItem = inventory.find(i => i.id === inventoryId);
+            if (!invItem) return;
+
+            const existingIdx = shoppingList.findIndex(s => s.inventoryId === inventoryId);
+            if (existingIdx > -1) {
+                shoppingList.splice(existingIdx, 1);
+                showToast(`Removed ${invItem.name} from list`);
+            } else {
+                shoppingList.push({
+                    name: invItem.name,
+                    checked: false,
+                    inventoryId: invItem.id
+                });
+                showToast(`Added ${invItem.name} to shopping list`);
+            }
+            saveState();
+            renderInventory();
+            renderShoppingList();
+            renderSmartSuggestions();
+        }
+
+        function addShoppingItem(name) {
+            const exists = shoppingList.some(s => s.name.toLowerCase() === name.toLowerCase());
+            if (!exists) {
+                shoppingList.push({
+                    name: name,
+                    checked: false,
+                    inventoryId: null
+                });
+                saveState();
+                renderShoppingList();
+                renderSmartSuggestions();
+                showToast(`Added "${name}" to shopping list`);
+            } else {
+                showToast(`"${name}" is already in your shopping list`);
+            }
+        }
+
+        function toggleShoppingCheck(index) {
+            if (shoppingList[index]) {
+                shoppingList[index].checked = !shoppingList[index].checked;
+                saveState();
+                renderShoppingList();
+                renderSmartSuggestions();
+            }
+        }
+
+        function removeShoppingItem(index) {
+            shoppingList.splice(index, 1);
+            saveState();
+            renderInventory();
+            renderShoppingList();
+            renderSmartSuggestions();
+        }
+
+        function restockFromShopping(inventoryId, shoppingIndex) {
+            const invItem = inventory.find(i => i.id === inventoryId);
+            if (invItem) {
+                invItem.inStock = true;
+                if (invItem.quantity === 0) invItem.quantity = 1;
+            }
+            shoppingList.splice(shoppingIndex, 1);
+            saveState();
+            renderInventory();
+            renderShoppingList();
+            renderRecipes();
+            renderSmartSuggestions();
+            showToast(`Restocked ${invItem ? invItem.name : 'item'} to pantry!`);
+        }
+
+        // Modal Functionality
+        function openModal(editId = null) {
+            itemModal.classList.remove('hidden');
+            setTimeout(() => {
+                itemModal.classList.remove('opacity-0');
+                itemModalCard.classList.remove('scale-95');
+            }, 10);
+
+            if (editId) {
+                const item = inventory.find(i => i.id === editId);
+                if (item) {
+                    document.getElementById('modalTitle').textContent = 'Edit Item';
+                    document.getElementById('modalItemId').value = item.id;
+                    document.getElementById('modalItemName').value = item.name;
+                    document.getElementById('modalItemCategory').value = item.category;
+                    document.getElementById('modalItemQuantity').value = item.quantity;
+                    document.getElementById('modalItemUnit').value = item.unit || '';
+                }
+            } else {
+                document.getElementById('modalTitle').textContent = 'Add New Inventory Item';
+                document.getElementById('modalItemId').value = '';
+                document.getElementById('itemForm').reset();
+                if (activeCategory !== 'All') {
+                    document.getElementById('modalItemCategory').value = activeCategory;
+                }
+            }
+        }
+
+        function closeModal() {
+            itemModal.classList.add('opacity-0');
+            itemModalCard.classList.add('scale-95');
+            setTimeout(() => {
+                itemModal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveModalItem() {
+            const id = document.getElementById('modalItemId').value;
+            const name = document.getElementById('modalItemName').value.trim();
+            const category = document.getElementById('modalItemCategory').value;
+            const quantity = parseInt(document.getElementById('modalItemQuantity').value) || 1;
+            const unit = document.getElementById('modalItemUnit').value.trim();
+
+            if (id) {
+                const item = inventory.find(i => i.id === id);
+                if (item) {
+                    item.name = name;
+                    item.category = category;
+                    item.quantity = quantity;
+                    item.unit = unit;
+                    showToast("Item updated successfully");
+                }
+            } else {
+                const newItem = {
+                    id: Date.now().toString(),
+                    name,
+                    category,
+                    quantity,
+                    unit,
+                    inStock: true
+                };
+                inventory.push(newItem);
+                showToast("New item added to inventory");
+            }
+
+            saveState();
+            renderInventory();
+            renderRecipes();
+            renderSmartSuggestions();
+            closeModal();
+        }
+
+        // Helper Utilities
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${escapeHtml(message)}`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
